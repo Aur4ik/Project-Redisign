@@ -1,9 +1,0 @@
-export const cars = [
- {id:1,brand:'Toyota',model:'Camry',year:2023,price:18500000,mileage:24000,body:'Седан',fuel:'Бензин',engine:'2.5 л',power:203,drive:'Передний',color:'#b4bcc0',tag:'Выбор недели',description:'Комфортный седан для ежедневных поездок. Просторный салон, климат-контроль и камера заднего вида.'},
- {id:2,brand:'Hyundai',model:'Tucson',year:2024,price:17200000,mileage:12000,body:'Кроссовер',fuel:'Бензин',engine:'2.0 л',power:150,drive:'Полный',color:'#879990',tag:'Малый пробег',description:'Универсальный кроссовер для города и поездок за его пределами. Подогрев сидений и мультимедийная система.'},
- {id:3,brand:'Kia',model:'K5',year:2023,price:14900000,mileage:31000,body:'Седан',fuel:'Бензин',engine:'2.0 л',power:150,drive:'Передний',color:'#d4d4cf',tag:'В наличии',description:'Выразительный городской седан. Удобные сиденья, круиз-контроль и современная панель приборов.'},
- {id:4,brand:'BMW',model:'X5',year:2022,price:32900000,mileage:45000,body:'Кроссовер',fuel:'Бензин',engine:'3.0 л',power:340,drive:'Полный',color:'#59636c',tag:'Премиум',description:'Просторный кроссовер с динамичным характером. Панорамная крыша, кожаный салон и полный привод.'},
- {id:5,brand:'Chevrolet',model:'Cobalt',year:2024,price:6800000,mileage:8000,body:'Седан',fuel:'Бензин',engine:'1.5 л',power:106,drive:'Передний',color:'#b9b3a7',tag:'До 10 млн ₸',description:'Практичный автомобиль для повседневных задач. Вместительный багажник и простое управление.'},
- {id:6,brand:'Toyota',model:'RAV4',year:2023,price:21800000,mileage:29000,body:'Кроссовер',fuel:'Бензин',engine:'2.5 л',power:199,drive:'Полный',color:'#7d8a93',tag:'В наличии',description:'Семейный кроссовер с просторным салоном. Подходит для города, путешествий и активного отдыха.'}
-];
-export const money = value => new Intl.NumberFormat('ru-KZ').format(value) + ' ₸';

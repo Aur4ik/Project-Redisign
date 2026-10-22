@@ -1,30 +1,142 @@
-import React, {useState} from 'react';
-import {createRoot} from 'react-dom/client';
-import {cars, money} from './cars';
-import './style.css';
-
-function read(key) { try { const value=JSON.parse(localStorage.getItem(key)||'[]'); return Array.isArray(value)?value:[]; } catch { return []; } }
-function App(){
- const [page,setPage]=useState('catalog'),[selected,setSelected]=useState(null),[query,setQuery]=useState(''),[brand,setBrand]=useState(''),[body,setBody]=useState(''),[budget,setBudget]=useState(''),[sort,setSort]=useState('default');
- const [favorites,setFavorites]=useState(()=>read('alaauto-favorites').filter(id=>cars.some(c=>c.id===id))),[bookings,setBookings]=useState(()=>read('alaauto-bookings')),[notice,setNotice]=useState(''),[success,setSuccess]=useState(false);
- function persist(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{setNotice('Браузер не разрешил сохранить данные. Освободите место или разрешите локальное хранение.');return false;}}
- function toggle(id){const next=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];if(persist('alaauto-favorites',next))setFavorites(next);}
- function go(next){setPage(next);setSelected(null);setSuccess(false);setNotice('');window.scrollTo({top:0,behavior:'smooth'});}
- function details(car){setSelected(car);setPage('detail');window.scrollTo({top:0,behavior:'smooth'});}
- function book(car){setSelected(car);setSuccess(false);setPage('booking');window.scrollTo({top:0,behavior:'smooth'});}
- const filtered=cars.filter(c=>(page!=='favorites'||favorites.includes(c.id))&&(`${c.brand} ${c.model}`.toLowerCase().includes(query.toLowerCase()))&&(!brand||c.brand===brand)&&(!body||c.body===body)&&(!budget||c.price<=Number(budget))).sort((a,b)=>sort==='low'?a.price-b.price:sort==='high'?b.price-a.price:sort==='new'?b.year-a.year:a.id-b.id);
- function submit(event){event.preventDefault();const form=event.currentTarget,data=new FormData(form),phone=String(data.get('phone')).replace(/\D/g,'');if(!/^[78]\d{10}$/.test(phone)){setNotice('Введите номер из 11 цифр, начинающийся с +7 или 8.');return;}const date=String(data.get('date'));if(date<today()){setNotice('Выберите сегодняшнюю или будущую дату.');return;}const name=String(data.get('name')).trim();if(name.length<2){setNotice('Укажите имя длиной не менее двух символов.');return;}const next=[...bookings,{id:crypto.randomUUID(),carId:selected.id,car:`${selected.brand} ${selected.model}`,name,phone,date,time:data.get('time')}];if(persist('alaauto-bookings',next)){setBookings(next);setNotice('');setSuccess(true);}}
- function reset(){setQuery('');setBrand('');setBody('');setBudget('');setSort('default');}
- return <><div className="demo">Учебный проект · автомобили и цены демонстрационные · заявки сохраняются только в этом браузере</div><header><a className="logo" href="#" onClick={e=>{e.preventDefault();go('catalog');}}>ala<span>auto</span><i>●</i></a><nav aria-label="Основная навигация"><button className={page==='catalog'?'active':''} onClick={()=>go('catalog')}>Автомобили</button><button className={page==='favorites'?'active':''} onClick={()=>{reset();go('favorites');}}>Избранное <small>{favorites.length}</small></button><button className={page==='requests'?'active':''} onClick={()=>go('requests')}>Мои заявки <small>{bookings.length}</small></button></nav><span className="location">↗ Казахстан</span></header>
- <main>{(page==='catalog'||page==='favorites')&&<>{page==='catalog'?<section className="hero"><div><p className="eyebrow">ВАШ СЛЕДУЮЩИЙ ПОВОРОТ</p><h1>Новая глава.<br/><em>Ваш автомобиль.</em></h1><p className="intro">Найдите автомобиль под свой ритм жизни.<br/>Сравните варианты и запишитесь на тест-драйв.</p><a className="primary" href="#inventory">Подобрать автомобиль <span>↗</span></a><div className="hero-bottom"><span>01 / 06</span><span>ВЫБИРАЙТЕ. СОХРАНЯЙТЕ. ПРОБУЙТЕ.</span></div></div><div className="hero-art"><span className="outline-word">DRIVE</span><CarArt car={cars[0]} hero/><div className="hero-caption"><span>Toyota Camry <small>2023 · 2.5 л · Автомат</small></span><strong>{money(cars[0].price)}</strong></div></div></section>:<section className="page-heading"><p className="eyebrow">ВАША КОЛЛЕКЦИЯ</p><h1>Избранное</h1><p>Автомобили, к которым хочется вернуться.</p></section>}
- <section id="inventory" className="inventory"><div className="section-title"><div><p className="eyebrow">НАЙДИТЕ СВОЙ ВАРИАНТ</p><h2>{page==='favorites'?'Сохранённые автомобили':'Автомобили в каталоге'} <span>{filtered.length}</span></h2></div><label className="sort">Сортировка<select value={sort} onChange={e=>setSort(e.target.value)}><option value="default">По умолчанию</option><option value="low">Сначала дешевле</option><option value="high">Сначала дороже</option><option value="new">Сначала новее</option></select></label></div><div className="filters"><label>Поиск<input placeholder="Марка или модель" value={query} onChange={e=>setQuery(e.target.value)}/></label><label>Марка<select value={brand} onChange={e=>setBrand(e.target.value)}><option value="">Все марки</option>{[...new Set(cars.map(c=>c.brand))].map(b=><option key={b}>{b}</option>)}</select></label><label>Кузов<select value={body} onChange={e=>setBody(e.target.value)}><option value="">Любой кузов</option><option>Седан</option><option>Кроссовер</option></select></label><label>Бюджет<select value={budget} onChange={e=>setBudget(e.target.value)}><option value="">Любая цена</option><option value="10000000">До 10 млн ₸</option><option value="15000000">До 15 млн ₸</option><option value="20000000">До 20 млн ₸</option><option value="25000000">До 25 млн ₸</option></select></label><button className="reset" onClick={reset}>Сбросить ↺</button></div>
- {filtered.length?<div className="grid">{filtered.map(car=><article className="card" key={car.id}><div className="car-image"><span className="tag">{car.tag}</span><button className={'heart '+(favorites.includes(car.id)?'saved':'')} aria-label={`${favorites.includes(car.id)?'Убрать из':'Добавить в'} избранное ${car.brand} ${car.model}`} aria-pressed={favorites.includes(car.id)} onClick={()=>toggle(car.id)}>{favorites.includes(car.id)?'♥':'♡'}</button><button className="art-button" aria-label={`Подробнее о ${car.brand} ${car.model}`} onClick={()=>details(car)}><CarArt car={car}/></button></div><div className="card-content"><p className="car-meta">{car.year} <span>•</span> {car.mileage.toLocaleString('ru')} км <span>•</span> {car.body}</p><h3><button onClick={()=>details(car)}>{car.brand} {car.model}</button></h3><p className="spec-line">{car.engine} / {car.fuel} / Автомат</p><div className="card-bottom"><strong>{money(car.price)}</strong><button className="arrow" aria-label={`Открыть ${car.brand} ${car.model}`} onClick={()=>details(car)}>↗</button></div></div></article>)}</div>:<div className="empty"><h3>{page==='favorites'&&!favorites.length?'Пока ничего не сохранено':'Подходящих машин не найдено'}</h3><p>{page==='favorites'&&!favorites.length?'Нажмите на сердечко в карточке автомобиля.':'Попробуйте изменить параметры поиска.'}</p><button className="primary" onClick={()=>{reset();go('catalog');}}>К каталогу ↗</button></div>}</section></>}
- {page==='detail'&&selected&&<><button className="back" onClick={()=>go('catalog')}>← Все автомобили</button><section className="detail"><div className="detail-visual"><CarArt car={selected}/><p>Схематичная иллюстрация · не фотография автомобиля</p></div><div><p className="eyebrow">АВТОМОБИЛЬ ИЗ ДЕМОКАТАЛОГА</p><h1>{selected.brand}<br/>{selected.model}</h1><p className="detail-price">{money(selected.price)}</p><p>{selected.description}</p><dl>{Object.entries({'Год':selected.year,'Пробег':`${selected.mileage.toLocaleString('ru')} км`,'Двигатель':`${selected.engine} · ${selected.power} л.с.`,'Коробка':'Автомат','Привод':selected.drive,'Кузов':selected.body}).map(([k,v])=><div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl><button className="primary" onClick={()=>book(selected)}>Записаться на тест-драйв ↗</button><button className="secondary" onClick={()=>toggle(selected.id)}>{favorites.includes(selected.id)?'♥ В избранном':'♡ Добавить в избранное'}</button></div></section></>}
- {page==='booking'&&selected&&<><button className="back" onClick={()=>details(selected)}>← К автомобилю</button><section className="booking-layout"><div><p className="eyebrow">ПОЗНАКОМЬТЕСЬ БЛИЖЕ</p><h1>Почувствуйте<br/>свою машину.</h1><p>Тест-драйв {selected.brand} {selected.model}</p><CarArt car={selected}/><p className="muted">Демонстрационная запись. Данные останутся на этом устройстве и не будут отправлены в автосалон.</p></div><div className="form-panel">{success?<div role="status"><span className="success-icon">✓</span><h2>Заявка сохранена</h2><p>Это учебная заявка, реальное время в автосалоне не забронировано. Посмотреть и удалить её можно в разделе «Мои заявки».</p><button className="primary" onClick={()=>go('requests')}>Мои заявки ↗</button></div>:<form onSubmit={submit}><h2>Запись на тест-драйв</h2><label>Ваше имя<input name="name" required minLength={2} maxLength={80} autoComplete="name" placeholder="Как к вам обращаться?"/></label><label>Телефон<input name="phone" type="tel" required autoComplete="tel" placeholder="+7 700 123 45 67" maxLength={24}/></label><div className="form-row"><label>Дата<input name="date" type="date" min={today()} required/></label><label>Время<select name="time" required>{['10:00','11:00','12:00','14:00','15:00','16:00','17:00'].map(t=><option key={t}>{t}</option>)}</select></label></div><label className="check"><input type="checkbox" required/>Разрешаю сохранить эти данные в браузере для демонстрации.</label><button className="primary" type="submit">Сохранить заявку ↗</button></form>}</div></section></>}
- {page==='requests'&&<section className="requests"><p className="eyebrow">ВАШИ ПЛАНЫ</p><h1>Мои заявки</h1><p>Учебные записи на тест-драйв, сохранённые в этом браузере.</p>{bookings.length?bookings.map(b=><article className="request" key={b.id}><div><h3>{b.car}</h3><p>{b.date} · {b.time}</p><p>{b.name} · {b.phone}</p><span className="tag">Сохранено локально</span></div><button className="secondary" onClick={()=>{const next=bookings.filter(x=>x.id!==b.id);if(persist('alaauto-bookings',next))setBookings(next);}}>Удалить заявку</button></article>):<div className="empty"><h2>Пока нет заявок</h2><p>Выберите автомобиль и удобную дату тест-драйва.</p><button className="primary" onClick={()=>go('catalog')}>Выбрать автомобиль ↗</button></div>}</section>}
- {notice&&<div role="alert" className="notice">{notice}<button onClick={()=>setNotice('')} aria-label="Закрыть сообщение">×</button></div>}</main><footer><a href="#" className="logo" onClick={e=>{e.preventDefault();go('catalog');}}>ala<span>auto</span><i>●</i></a><span>Ваш путь начинается с выбора.</span><small>© 2026 AlaAuto · Frontend MVP</small></footer></>;
+import React from "react";
+import { createRoot } from "react-dom/client";
+import {
+  BrowserRouter,
+  Link,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { CatalogProvider } from "./context/CatalogContext";
+import { Layout, Loading, ErrorBox } from "./components/UI";
+import CatalogPage from "./pages/CatalogPage";
+import AuthPage from "./pages/AuthPage";
+import CarPage from "./pages/CarPage";
+import BookingsPage from "./pages/BookingsPage";
+import ProfilePage from "./pages/ProfilePage";
+import AdminPage from "./pages/AdminPage";
+import "./style.css";
+function Protected({ admin = false, children }) {
+  const { user, loading, error, refresh } = useAuth(),
+    location = useLocation();
+  if (loading) return <Loading />;
+  if (error)
+    return (
+      <div className="empty">
+        <ErrorBox message={error} />
+        <button className="primary" onClick={refresh}>
+          Повторить ↻
+        </button>
+      </div>
+    );
+  if (!user)
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  if (admin && user.role !== "admin")
+    return (
+      <div className="empty">
+        <h1>Доступ ограничен</h1>
+        <p>Этот раздел предназначен для администратора.</p>
+        <Link to="/" className="primary">
+          К каталогу
+        </Link>
+      </div>
+    );
+  return children;
 }
-function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function CarArt({car,hero=false}){const suv=car.body==='Кроссовер';return <svg viewBox="0 0 640 310" role="img" aria-label={`Иллюстрация ${car.brand} ${car.model}`} className={hero?'car-art hero-car':'car-art'}><ellipse cx="330" cy="260" rx="265" ry="20" fill="#000" opacity=".1"/><path d={suv?'M68 209 L83 160 Q92 146 148 139 L207 77 Q220 65 251 65 L408 65 Q434 65 450 89 L486 137 L558 151 Q586 157 592 189 L586 230 L69 230 Z':'M61 214 L81 180 Q98 165 159 153 L229 100 Q245 88 276 88 L392 88 Q415 88 443 111 L492 150 L560 168 Q582 174 591 207 L581 233 L67 233 Z'} fill={car.color} stroke="#27302f" strokeWidth="3"/><path d={suv?'M169 138 L224 84 L295 84 L295 138 Z M311 84 L402 84 Q418 84 435 105 L457 138 L311 138 Z':'M185 150 L243 107 L296 107 L296 150 Z M312 107 L387 107 Q406 107 429 126 L459 150 L312 150 Z'} fill="#253a40" stroke="#c6d5d4" strokeWidth="2"/><path d="M81 187 Q290 169 560 184 M306 155 L306 222 M469 155 L474 219" fill="none" stroke="#27302f" opacity=".35" strokeWidth="2"/><rect x="321" y="166" width="24" height="5" rx="2" fill="#233330"/><rect x="191" y="166" width="22" height="5" rx="2" fill="#233330"/><path d="M80 186 L125 184 L117 201 L72 203 M534 178 L577 188 L581 201 L542 196" fill="#f4f3de"/><path d="M254 115 L275 115 M328 115 L375 115" stroke="#cde3df" opacity=".3" strokeWidth="5"/><path d="M73 221 L587 221" stroke="#233330" strokeWidth="8"/><Wheel x={166}/><Wheel x={491}/><path d="M94 214 L116 214 M546 214 L572 214" stroke="#7b8583" strokeWidth="4"/></svg>}
-function Wheel({x}){return <g><circle cx={x} cy="230" r="43" fill="#222829"/><circle cx={x} cy="230" r="29" fill="#a7b0ae"/><circle cx={x} cy="230" r="21" fill="#4a5556"/>{[0,60,120].map(a=><path key={a} d={`M${x-23} 230 L${x+23} 230`} stroke="#cdd5d2" strokeWidth="6" transform={`rotate(${a} ${x} 230)`}/>)}<circle cx={x} cy="230" r="7" fill="#c3cbc6"/></g>}
-createRoot(document.getElementById('root')).render(<App/>);
+class ErrorBoundary extends React.Component {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? (
+      <main className="empty">
+        <h1>Не удалось открыть страницу</h1>
+        <p>Попробуйте перезагрузить приложение.</p>
+        <button className="primary" onClick={() => window.location.reload()}>
+          Перезагрузить
+        </button>
+      </main>
+    ) : (
+      this.props.children
+    );
+  }
+}
+function App() {
+  return (
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <CatalogProvider>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<CatalogPage key="catalog" />} />
+                <Route path="/login" element={<AuthPage key="login" />} />
+                <Route
+                  path="/register"
+                  element={<AuthPage register key="register" />}
+                />
+                <Route path="/cars/:id" element={<CarPage />} />
+                <Route
+                  path="/cars/:id/test-drive"
+                  element={
+                    <Protected>
+                      <CarPage booking />
+                    </Protected>
+                  }
+                />
+                <Route
+                  path="/favorites"
+                  element={
+                    <Protected>
+                      <CatalogPage onlyFavorites key="favorites" />
+                    </Protected>
+                  }
+                />
+                <Route
+                  path="/bookings"
+                  element={
+                    <Protected>
+                      <BookingsPage />
+                    </Protected>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <Protected>
+                      <ProfilePage />
+                    </Protected>
+                  }
+                />
+                <Route
+                  path="/admin"
+                  element={
+                    <Protected admin>
+                      <AdminPage />
+                    </Protected>
+                  }
+                />
+                <Route
+                  path="*"
+                  element={
+                    <section className="empty">
+                      <h1>404</h1>
+                      <p>Кажется, вы свернули с маршрута.</p>
+                      <Link className="primary" to="/">
+                        Вернуться к автомобилям ↗
+                      </Link>
+                    </section>
+                  }
+                />
+              </Routes>
+            </Layout>
+          </CatalogProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
+  );
+}
+createRoot(document.getElementById("root")).render(<App />);

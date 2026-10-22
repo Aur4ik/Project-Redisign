@@ -1,1 +1,25 @@
-{"name":"alaauto","private":true,"version":"1.0.0","type":"module","scripts":{"dev":"vite --host 127.0.0.1","build":"vite build","preview":"vite preview --host 127.0.0.1"},"dependencies":{"react":"^19.0.0","react-dom":"^19.0.0"},"devDependencies":{"vite":"^6.0.0"}}
+{
+  "name": "alaauto",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5173 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "server": "node scripts/backend.mjs",
+    "admin": "node scripts/backend.mjs --promote",
+    "start": "node scripts/start.mjs",
+    "test:server": "node scripts/backend.mjs --test"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
+    "prettier": "^3.6.2",
+    "vite": "^6.0.0"
+  }
+}
